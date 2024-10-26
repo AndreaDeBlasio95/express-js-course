@@ -75,7 +75,7 @@ app.get("/api/products", (req, res) => {
   res.send([{ id: 1, productName: "berry", price: 2.99 }]);
 });
 
-// PUT: Update a specific user
+// PUT: Update a specific user, update the entire user
 app.put("/api/users/:id", (req, res) => {
   const {
     body,
@@ -84,11 +84,27 @@ app.put("/api/users/:id", (req, res) => {
 
   const parsedId = parseInt(id);
   if (isNaN(parsedId)) return res.sendStatus(400);
-
   const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
+
   if (findUserIndex === -1) return res.sendStatus(404);
 
-  mockUsers[findUserIndex] = { id: parsedId, ...body };
+  mockUsers[findUserIndex] = { id: parsedId, ...body }; // replace the existing user with the new user
+  return res.sendStatus(200);
+});
+
+// PATCH: Update a specific user, update a portion of the user
+app.patch("/api/users/:id", (req, res) => {
+  const {
+    body,
+    params: { id },
+  } = req;
+
+  const parsedId = parseInt(id);
+  if (isNaN(parsedId)) return res.sendStatus(400);
+  const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
+
+  if (findUserIndex === -1) return res.sendStatus(404);
+  mockUsers[findUserIndex] = { ...mockUsers[findUserIndex], ...body }; // merge the existing user with the new user
   return res.sendStatus(200);
 });
 
