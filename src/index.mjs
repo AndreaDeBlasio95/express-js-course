@@ -108,6 +108,20 @@ app.patch("/api/users/:id", (req, res) => {
   return res.sendStatus(200);
 });
 
-// PUT: Update the entire user, all fields, when not all fields are provided, they will be set to null
-// PATCH: Update a portion of a specific user
 // DELETE: Delete a specific user
+app.delete("/api/users/:id", (req, res) => {
+  const {
+    params: { id },
+  } = req;
+
+  const parsedId = parseInt(id);
+  if (isNaN(parsedId)) return res.sendStatus(400);
+
+  const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
+
+  if (findUserIndex === -1) return res.sendStatus(404);
+
+  mockUsers.splice(findUserIndex, 1); // remove the user from the array
+
+  return res.sendStatus(200);
+});
