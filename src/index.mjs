@@ -1,5 +1,12 @@
 import express from "express";
-import { query, validationResult, body, matchedData } from "express-validator";
+import {
+  query,
+  validationResult,
+  body,
+  matchedData,
+  checkSchema,
+} from "express-validator";
+import { createUserValidationSchema } from "./utils/validationSchemas.mjs";
 
 const app = express();
 
@@ -75,30 +82,17 @@ app.get(
 );
 
 // Post
-app.post(
-  "/api/users",
-  [
-    body("username")
-      .notEmpty()
-      .withMessage("Username cannot be empty")
-      .isLength({ min: 3, max: 10 })
-      .withMessage("Username must be 3-10 characters long")
-      .isString()
-      .withMessage("Username must be a string"),
-    body("displayName").notEmpty().withMessage("Display name cannot be empty"),
-  ],
-  (req, res) => {
-    const result = validationResult(req);
-    console.log(result);
-    if (!result.isEmpty())
-      return res.status(400).send({ errors: result.array() });
+app.post("/api/users", checkSchema(createUserValidationSchema), (req, res) => {
+  const result = validationResult(req);
+  console.log(result);
+  if (!result.isEmpty())
+    return res.status(400).send({ errors: result.array() });
 
-    const data = matchedData(req);
-    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
-    mockUsers.push(newUser);
-    return res.status(201).send(newUser);
-  }
-);
+  const data = matchedData(req);
+  const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
+  mockUsers.push(newUser);
+  return res.status(201).send(newUser);
+});
 
 // Get a specific user
 app.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
