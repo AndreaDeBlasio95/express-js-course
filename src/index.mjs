@@ -5,6 +5,27 @@ const app = express();
 // Middleware
 app.use(express.json());
 
+const loggingMiddleware = (req, res, next) => {
+  console.log(`${req.method} - ${req.url}`);
+  next();
+};
+
+const resolveIndexByUserId = (req, res, next) => {
+  const {
+    params: { id },
+  } = req;
+
+  const parsedId = parseInt(id);
+  if (isNaN(parsedId)) return res.sendStatus(400);
+  const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
+
+  if (findUserIndex === -1) return res.sendStatus(404);
+
+  // attach the findUserIndex to the req object
+  req.findUserIndex = findUserIndex;
+  next();
+};
+
 const mockUsers = [
   { id: 1, username: "andrea", displayName: "Andrea" },
   { id: 2, username: "mark", displayName: "Mark" },
@@ -20,10 +41,8 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-// the first parameter is the route
-// the second parameter is a callback function that will be called when the route is requested
 app.get("/", (req, res) => {
-  res.send("Hello, world!");
+  res.status(201).send({ msg: "Hello World" });
 });
 
 // Get all users
@@ -46,7 +65,6 @@ app.get("/api/users", (req, res) => {
 
 // Post
 app.post("/api/users", (req, res) => {
-  console.log(req.body);
   const { body } = req;
   const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...body };
   mockUsers.push(newUser);
@@ -54,19 +72,11 @@ app.post("/api/users", (req, res) => {
 });
 
 // Get a specific user
-app.get("/api/users/:id", (req, res) => {
-  // req.params is an object that stores all the route parameters
-  console.log(req.params);
-  const parsedId = parseInt(req.params.id);
-  console.log(parsedId);
-  if (isNaN(parsedId)) {
-    return res.status(400).send({ msg: "Bad Request: Invalid id" });
-  }
+app.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
+  const { findUserIndex } = req;
+  const findUser = mockUsers[findUserIndex];
 
-  const findUser = mockUsers.find((user) => user.id === parsedId);
-  if (!findUser) {
-    return res.sendStatus(404);
-  }
+  if (!findUser) return res.sendStatus(404);
 
   return res.send(findUser);
 });
@@ -76,50 +86,24 @@ app.get("/api/products", (req, res) => {
 });
 
 // PUT: Update a specific user, update the entire user
-app.put("/api/users/:id", (req, res) => {
-  const {
-    body,
-    params: { id },
-  } = req;
+app.put("/api/users/:id", resolveIndexByUserId, (req, res) => {
+  const { body, findUserIndex } = req; // destructure the body and findUserIndex from the req object
 
-  const parsedId = parseInt(id);
-  if (isNaN(parsedId)) return res.sendStatus(400);
-  const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
-
-  if (findUserIndex === -1) return res.sendStatus(404);
-
-  mockUsers[findUserIndex] = { id: parsedId, ...body }; // replace the existing user with the new user
+  mockUsers[findUserIndex] = { id: mockUsers[findUserIndex].id, ...body }; // replace the existing user with the new user
   return res.sendStatus(200);
 });
 
 // PATCH: Update a specific user, update a portion of the user
-app.patch("/api/users/:id", (req, res) => {
-  const {
-    body,
-    params: { id },
-  } = req;
+app.patch("/api/users/:id", resolveIndexByUserId, (req, res) => {
+  const { body, findUserIndex } = req;
 
-  const parsedId = parseInt(id);
-  if (isNaN(parsedId)) return res.sendStatus(400);
-  const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
-
-  if (findUserIndex === -1) return res.sendStatus(404);
   mockUsers[findUserIndex] = { ...mockUsers[findUserIndex], ...body }; // merge the existing user with the new user
   return res.sendStatus(200);
 });
 
 // DELETE: Delete a specific user
-app.delete("/api/users/:id", (req, res) => {
-  const {
-    params: { id },
-  } = req;
-
-  const parsedId = parseInt(id);
-  if (isNaN(parsedId)) return res.sendStatus(400);
-
-  const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
-
-  if (findUserIndex === -1) return res.sendStatus(404);
+app.delete("/api/users/:id", resolveIndexByUserId, (req, res) => {
+  const { findUserIndex } = req;
 
   mockUsers.splice(findUserIndex, 1); // remove the user from the array
 
