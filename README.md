@@ -18,3 +18,5 @@ Add these two lines in package.json -> scripts ->
 Add this line at the end on the package.json
 "type": "module"
 This allow the modern import export syntax
+
+npm i express-validator
