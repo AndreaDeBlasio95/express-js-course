@@ -1,9 +1,11 @@
 import express from "express";
 import routes from "./routes/index.mjs";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser("helloworld"));
 app.use(routes);
 
 // process is a global object that provides information about the current Node.js process
@@ -17,5 +19,6 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-  res.status(201).send({ msg: "Hello World" });
+  res.cookie("name", "world", { maxAge: 10000, signed: true });
+  res.status(201).send({ msg: "Hello" });
 });

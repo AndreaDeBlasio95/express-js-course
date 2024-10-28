@@ -20,3 +20,5 @@ Add this line at the end on the package.json
 This allow the modern import export syntax
 
 npm i express-validator
+
+npm i cookie-parser
