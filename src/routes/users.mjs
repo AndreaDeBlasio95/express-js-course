@@ -9,7 +9,16 @@ import { mockUsers } from "../utils/constants.mjs";
 import { createUserValidationSchema } from "../utils/validationSchemas.mjs";
 import { resolveIndexByUserId } from "../utils/middlewares.mjs";
 
-const router = Router();
+const router = Router(); // the router is an object that provides methods to create routes
+/**
+ * * Router vs express:
+ * Router is a class that provides methods to create routes,
+ * express is an object that provides methods to create a server
+ * * router.get vs app.get:
+ * router.get is a method that creates a route for the GET HTTP method,
+ * app.get is a method that creates a route for the GET HTTP method, but it is called on the express object
+ * * There are no differences between router.get and app.get in terms of functionality.
+ */
 
 // GET: Get all users
 router.get(
@@ -21,9 +30,11 @@ router.get(
     .isLength({ min: 3, max: 10 })
     .withMessage("Must be at least 3-10 characters long"),
   (req, res) => {
+    console.log(req.session);
+    console.log(req.sessionID);
     const result = validationResult(req);
     console.log(result);
-    // destructuring
+    // destructuring the query object from the request object
     const {
       query: { filter, value },
     } = req;
@@ -59,10 +70,10 @@ router.post(
     if (!result.isEmpty())
       return res.status(400).send({ errors: result.array() });
 
-    const data = matchedData(req);
-    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
-    mockUsers.push(newUser);
-    return res.status(201).send(newUser);
+    const data = matchedData(req); // get the validated data from the request object
+    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data }; // create a new user object
+    mockUsers.push(newUser); // add the new user to the array of users
+    return res.status(201).send(newUser); // send the new user as a response
   }
 );
 
@@ -92,3 +103,40 @@ router.delete("/api/users/:id", resolveIndexByUserId, (req, res) => {
 });
 
 export default router;
+
+/**
+ * * |----- Route Parameters -----|
+ * Route parameters are used to capture values in the URL. They are
+ * defined by a colon (:) followed by the parameter name.
+ * For example, in the route
+ * /api/users/:id
+ * , :id is a route parameter.
+ */
+
+/**
+ * * |----- Request Parameters -----|
+ * req.params: An object containing properties mapped to the named
+ * route “parameters”. For example, if you have the route
+ * /api/users/:id
+ * then the “id” property is available as
+ * req.params.id.
+ */
+
+/**
+ * * |----- Query Parameters -----|
+ * Query parameters are used to filter or sort the data. They are defined
+ * by a question mark (?) followed by the parameter name and value.
+ * For example, in the route:
+ * /api/users?filter=name&value=John
+ * , filter and value are query parameters.
+ * req.query:
+ * An object containing a property for each query parameter.
+ */
+
+/**
+ * * |----- Express Validator -----|
+ * Express Validator is a set of middleware functions to validate the request
+ * query("filter") - Validates the query parameter "filter"
+ * validationResult(req) - Extracts the validation errors from the request and handles them
+ *
+ */
