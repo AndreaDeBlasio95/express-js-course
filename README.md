@@ -35,5 +35,7 @@ cookie-parser is a middleware that parses cookies attached to the client request
 
 npm install express-session
 
+npm i passport passport-local
+
 Run the app:
 npm run start:dev

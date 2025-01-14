@@ -3,13 +3,13 @@ import routes from "./routes/index.mjs";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import { mockUsers } from "./utils/constants.mjs";
+import passport from "passport";
+import "./strategies/local-strategy.mjs";
 
 const app = express();
 
 app.use(express.json()); // for parsing application/json (middleware), it parses incoming requests with JSON payloads
-
 app.use(cookieParser("helloworld")); // for parsing cookies (middleware), it parses cookies attached to the client request object
-
 app.use(
   session({
     secret: "andrea the dev",
@@ -19,7 +19,21 @@ app.use(
   })
 ); // for creating a session middleware
 
+app.use(passport.initialize()); // for initializing passport
+app.use(passport.session()); // for using passport with sessions
+
 app.use(routes); // use the routes from the index file
+
+app.post("/api/auth", passport.authenticate("local"), (req, res) => {
+  res.status(200).send({ msg: "Logged in" });
+});
+
+app.get("/api/auth/status", (req, res) => {
+  console.log("Inside /auth/status endpoint");
+  console.log(req.user);
+  console.log(req.session);
+  return req.user ? res.send(req.user) : res.sendStatus(401);
+});
 
 // process is a global object that provides information about the current Node.js process
 // process.env is an object that stores and controls the environment in which the process runs
